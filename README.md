@@ -1,4 +1,4 @@
-# RimWorldTogether
+# RimClaim
 
 A bespoke player-sovereignty multiplayer layer for RimWorld, built on top of
 [Zetrith's Multiplayer mod](https://github.com/rwmt/Multiplayer).
