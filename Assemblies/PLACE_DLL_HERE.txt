@@ -1,0 +1,12 @@
+After building, RimClaim.dll must appear in THIS folder.
+
+The csproj is configured to output here automatically:
+  <OutputPath>../../Assemblies</OutputPath>
+
+If RimClaim.dll is not here, the mod will:
+  - Show a "not made for this version" warning
+  - Load XML defs but run NO code
+  - Have no build menu options
+  - Do nothing when you host
+
+Build it (see BUILD_INSTRUCTIONS.md in the mod root).

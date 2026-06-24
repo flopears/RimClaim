@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- ── TIER 1: CLAIM POST ──────────────────────────────────────────────── -->
+  <ThingDef ParentName="BuildingBase">
+    <defName>RC_ClaimPost</defName>
+    <label>claim post</label>
+    <description>A simple territorial marker built from available materials. Establishes basic ownership and a 15-tile claim radius. No tick rate control. Upgrade to a Territory Beacon for full features including speed hooks and a larger field.</description>
+    <thingClass>RimClaim.Building_LandclaimBlock</thingClass>
+    <category>Building</category>
+    <designationCategory>Misc</designationCategory>
+    <graphicData>
+      <texPath>RC/Buildings/ClaimPost</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+    </graphicData>
+    <stuffCategories>
+      <li>Metallic</li>
+      <li>Stony</li>
+      <li>Woody</li>
+    </stuffCategories>
+    <costStuffCount>75</costStuffCount>
+    <statBases>
+      <MaxHitPoints>150</MaxHitPoints>
+      <WorkToBuild>3000</WorkToBuild>
+      <Flammability>0.5</Flammability>
+      <Beauty>0</Beauty>
+    </statBases>
+    <size>(1,1)</size>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <rotatable>false</rotatable>
+    <selectable>true</selectable>
+    <tickerType>Rare</tickerType>
+    <building>
+      <destroySound>BuildingDestroyed_Metal_Big</destroySound>
+    </building>
+  </ThingDef>
+
+  <!-- ── TIER 2: TERRITORY BEACON ────────────────────────────────────────── -->
+  <ThingDef ParentName="BuildingBase">
+    <defName>RC_LandclaimBlock</defName>
+    <label>territory beacon</label>
+    <description>A territorial beacon that projects a sovereignty field over the surrounding 25-tile area. Enables per-claim tick rate control, speed hooks, and full territorial enforcement. Can break down over time — repair to restore. The structural housing can be built from various materials affecting durability.</description>
+    <thingClass>RimClaim.Building_LandclaimBlock</thingClass>
+    <category>Building</category>
+    <designationCategory>Misc</designationCategory>
+    <graphicData>
+      <texPath>RC/Buildings/LandclaimBlock</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+    </graphicData>
+    <stuffCategories>
+      <li>Metallic</li>
+      <li>Stony</li>
+      <li>Woody</li>
+    </stuffCategories>
+    <costStuffCount>150</costStuffCount>
+    <costList>
+      <ComponentIndustrial>4</ComponentIndustrial>
+      <Plasteel>30</Plasteel>
+    </costList>
+    <statBases>
+      <MaxHitPoints>300</MaxHitPoints>
+      <WorkToBuild>8000</WorkToBuild>
+      <Flammability>0.5</Flammability>
+      <Beauty>2</Beauty>
+    </statBases>
+    <size>(2,2)</size>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <rotatable>false</rotatable>
+    <selectable>true</selectable>
+    <tickerType>Rare</tickerType>
+    <comps>
+      <li Class="CompProperties_Breakdownable"/>
+    </comps>
+    <researchPrerequisites>
+      <li>RC_TerritorialBeacon</li>
+    </researchPrerequisites>
+    <building>
+      <destroySound>BuildingDestroyed_Metal_Big</destroySound>
+    </building>
+  </ThingDef>
+
+</Defs>

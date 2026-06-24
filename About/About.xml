@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>RimClaim</name>
+  <packageId>rc.rimclaim</packageId>
+  <author>RimClaim</author>
+  <description>
+    A bespoke player-sovereignty multiplayer layer built on Zetrith's Multiplayer mod.
+
+    Features:
+    - Landclaim territory system with per-claim tick rate control
+    - Per-player ownership of buildings, items, and zones
+    - Team system with granular shared-access permissions
+    - Player diplomacy, PVP, and steal mechanics
+    - Negotiated pause system with per-claim speed hooks
+    - Fair round-robin event targeting scaled to player count
+    - Gravship co-launch coordination with boarding readiness
+    - Trade isolation to player's claim only
+    - Ceremony and DLC compatibility
+
+    Requires Zetrith's Multiplayer and Harmony.
+  </description>
+  <supportedVersions>
+    <li>1.5</li>
+    <li>1.6</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>rwmt.Multiplayer</packageId>
+      <displayName>Multiplayer</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2606448745</steamWorkshopUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>rwmt.Multiplayer</li>
+  </loadAfter>
+</ModMetaData>

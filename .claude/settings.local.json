@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "PowerShell($asm = [System.Reflection.Assembly]::LoadFile\\(\"F:\\\\SteamLibrary\\\\steamapps\\\\common\\\\RimWorld\\\\RimWorldWin64_Data\\\\Managed\\\\Assembly-CSharp.dll\"\\); $asm.GetTypes\\(\\) | Where-Object { $_.Name -match \"DebugAction\" -and $_.Name -match \"Attribute|Type\" } | Select-Object FullName | Format-Table -AutoSize)",
+      "PowerShell($asm = [System.Reflection.Assembly]::LoadFile\\(\"F:\\\\SteamLibrary\\\\steamapps\\\\common\\\\RimWorld\\\\RimWorldWin64_Data\\\\Managed\\\\Assembly-CSharp.dll\"\\); try { $types = $asm.GetTypes\\(\\) } catch [System.Reflection.ReflectionTypeLoadException] { $types = $_.Exception.Types | Where-Object { $_ -ne $null } }; $types | Where-Object { $_.Name -match \"DebugAction\" } | Select-Object FullName | Format-Table -AutoSize)",
+      "PowerShell($asm = [System.Reflection.Assembly]::LoadFile\\(\"F:\\\\SteamLibrary\\\\steamapps\\\\common\\\\RimWorld\\\\RimWorldWin64_Data\\\\Managed\\\\Assembly-CSharp.dll\"\\); try { $types = $asm.GetTypes\\(\\) } catch [System.Reflection.ReflectionTypeLoadException] { $types = $_.Exception.Types | Where-Object { $_ -ne $null } }; $da = $types | Where-Object { $_.FullName -eq \"LudeonTK.DebugActionAttribute\" }; \"FIELDS:\"; $da.GetFields\\(\\) | Select-Object Name, FieldType | Format-Table -AutoSize; \"CTORS:\"; $da.GetConstructors\\(\\) | ForEach-Object { \\($_.GetParameters\\(\\) | ForEach-Object { $_.ParameterType.Name + ' ' + $_.Name }\\) -join ', ' }; \"AllowedGameStates:\"; \\($types | Where-Object { $_.Name -eq 'AllowedGameStates' }\\).FullName)",
+      "PowerShell(git config *)"
+    ]
+  }
+}

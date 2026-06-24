@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MainButtonDef>
+    <defName>RC_PlayersTab</defName>
+    <label>Players</label>
+    <description>Manage players, teams, territory, and diplomacy.</description>
+    <tabWindowClass>RimClaim.UI.MainTabWindow_Players</tabWindowClass>
+    <order>19</order>
+    <buttonVisible>true</buttonVisible>
+    <!-- No iconPath — uses text label. Add RC/UI/Player.png to Textures to show icon. -->
+  </MainButtonDef>
+</Defs>

@@ -1,0 +1,87 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>RimClaim</AssemblyName>
+    <RootNamespace>RimClaim</RootNamespace>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <OutputPath>../../Assemblies</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <!-- Your RimWorld install. Override with -p:RimWorldPath=... if it moves. -->
+    <RimWorldPath Condition="'$(RimWorldPath)' == ''">F:\SteamLibrary\steamapps\common\RimWorld</RimWorldPath>
+    <Managed>$(RimWorldPath)\RimWorldWin64_Data\Managed</Managed>
+  </PropertyGroup>
+
+  <!-- RimWorld + Unity assemblies (provided by the game, never copied to output) -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(Managed)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(Managed)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(Managed)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(Managed)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(Managed)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Harmony — pulled from NuGet so no path guessing. ExcludeAssets runtime
+       means we compile against it but don't copy the DLL (RimWorld provides it). -->
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.3.3">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    Multiplayer.API.dll — lives inside Zetrith's Multiplayer mod.
+    The build auto-searches common locations. If it can't find it,
+    set MP_API_PATH to the folder containing Multiplayer.API.dll.
+  -->
+  <PropertyGroup>
+    <MpApiGuess1>$(RimWorldPath)\Mods\Multiplayer\Assemblies\Multiplayer.API.dll</MpApiGuess1>
+    <MpApiGuess2>$(RimWorldPath)\..\..\workshop\content\294100\2606448745\Assemblies\Multiplayer.API.dll</MpApiGuess2>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(MpApiGuess1)')">
+    <Reference Include="Multiplayer.API">
+      <HintPath>$(MpApiGuess1)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('$(MpApiGuess1)') AND Exists('$(MpApiGuess2)')">
+    <Reference Include="Multiplayer.API">
+      <HintPath>$(MpApiGuess2)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('$(MpApiGuess1)') AND !Exists('$(MpApiGuess2)') AND Exists('$(MP_API_PATH)\Multiplayer.API.dll')">
+    <Reference Include="Multiplayer.API">
+      <HintPath>$(MP_API_PATH)\Multiplayer.API.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Loud error if Multiplayer.API.dll can't be found anywhere -->
+  <Target Name="CheckMpApi" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(MpApiGuess1)') AND !Exists('$(MpApiGuess2)') AND !Exists('$(MP_API_PATH)\Multiplayer.API.dll')"
+           Text="Multiplayer.API.dll not found. Subscribe to Zetrith's Multiplayer mod, or set MP_API_PATH to the folder containing Multiplayer.API.dll. Searched: $(MpApiGuess1) and the workshop folder." />
+  </Target>
+
+</Project>

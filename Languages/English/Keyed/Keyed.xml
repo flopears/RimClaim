@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- Ownership -->
+  <RC_Claim>Claim</RC_Claim>
+  <RC_ClaimDesc>Claim this for yourself.</RC_ClaimDesc>
+  <RC_Unclaim>Release</RC_Unclaim>
+  <RC_UnclaimDesc>Release ownership. Anyone can claim this.</RC_UnclaimDesc>
+  <RC_ShareWithTeam>Share with Team</RC_ShareWithTeam>
+  <RC_ShareWithTeamDesc>Allow teammates to use this based on team permissions.</RC_ShareWithTeamDesc>
+  <RC_Unshare>Stop Sharing</RC_Unshare>
+  <RC_UnshareDesc>Revoke team access. Only you can use this.</RC_UnshareDesc>
+  <RC_BillsTabLocked>This workbench belongs to another player.\n\nJoin their team and enable bill sharing to access it.</RC_BillsTabLocked>
+
+  <!-- Landclaim -->
+  <RC_ClaimOverlap>Cannot place — overlaps another player's territory (including buffer zone).</RC_ClaimOverlap>
+  <RC_TooManyClaims>Cannot place — you already have the maximum number of claims ({0}).</RC_TooManyClaims>
+  <RC_ZoneRequiresClaim>Zones can only be placed inside your territory claim.</RC_ZoneRequiresClaim>
+  <RC_CantBuildEnemyTerritory>Cannot build inside enemy territory.</RC_CantBuildEnemyTerritory>
+  <RC_SpeedHook>Hook Speed Buttons</RC_SpeedHook>
+  <RC_SpeedHookDesc>When enabled, the game speed buttons control this claim's tick rate instead of global speed. Space pauses/unpauses your claim only.</RC_SpeedHookDesc>
+  <RC_SpeedLockedGravshipEvent>Speed is locked during a gravship event.</RC_SpeedLockedGravshipEvent>
+  <RC_MapEventWarning>Event active — running at {0}× costs more inside your claim. Effects and damage progress faster.</RC_MapEventWarning>
+
+  <!-- Pause system -->
+  <RC_CantPauseDuringPVP>Cannot pause during active PVP.</RC_CantPauseDuringPVP>
+  <RC_NoEmergencyPausesLeft>No emergency pauses remaining today.</RC_NoEmergencyPausesLeft>
+  <RC_EmergencyPause>{0} called an emergency pause!</RC_EmergencyPause>
+  <RC_SoftPauseRequest>{0} wants to pause. (Auto-accepts in 5s)</RC_SoftPauseRequest>
+  <RC_PauseAccept>Allow</RC_PauseAccept>
+  <RC_PauseObject>Object</RC_PauseObject>
+
+  <!-- Players tab -->
+  <RC_PlayersTabLabel>Players</RC_PlayersTabLabel>
+  <RC_TeamSubTab>Team</RC_TeamSubTab>
+  <RC_EnemiesSubTab>Enemies</RC_EnemiesSubTab>
+  <RC_CreateTeam>Form Team</RC_CreateTeam>
+  <RC_DisbandTeam>Disband</RC_DisbandTeam>
+  <RC_InviteToTeam>Invite</RC_InviteToTeam>
+  <RC_LeaveTeam>Leave Team</RC_LeaveTeam>
+
+  <!-- Permissions -->
+  <RC_Perm_Resources>Share Resources</RC_Perm_Resources>
+  <RC_Perm_Storage>Share Stockpiles</RC_Perm_Storage>
+  <RC_Perm_Furniture>Share Furniture</RC_Perm_Furniture>
+  <RC_Perm_Buildings>Share Buildings</RC_Perm_Buildings>
+  <RC_Perm_Areas>Share Areas/Zones</RC_Perm_Areas>
+  <RC_Perm_Bills>Share Bills</RC_Perm_Bills>
+  <RC_Perm_PawnBar>Show Teammate Pawns</RC_Perm_PawnBar>
+  <RC_Perm_Doors>Share Doors</RC_Perm_Doors>
+  <RC_Perm_All>Share Everything</RC_Perm_All>
+
+  <!-- Diplomacy -->
+  <RC_DeclareEnemy>Declare Enemy</RC_DeclareEnemy>
+  <RC_DeclarePeace>Offer Peace</RC_DeclarePeace>
+  <RC_StatusNeutral>Neutral</RC_StatusNeutral>
+  <RC_StatusEnemy>Enemy</RC_StatusEnemy>
+  <RC_PVPActive>PVP Active</RC_PVPActive>
+
+  <!-- Steal -->
+  <RC_PlayerJoined>{0} joined the colony.</RC_PlayerJoined>
+  <RC_PlayerLeft>{0} left the colony.</RC_PlayerLeft>
+
+  <!-- Trade -->
+  <RC_CantPauseDuringTrade>Trade in progress in this claim — speed temporarily locked.</RC_CantPauseDuringTrade>
+
+  <!-- Gravship -->
+  <RC_GravshipLaunchAborted>Launch aborted by {0}.</RC_GravshipLaunchAborted>
+  <RC_EmergencyLaunch>{0} initiated emergency launch!</RC_EmergencyLaunch>
+  <RC_CoLaunchConfirmed>{0} has joined the co-launch.</RC_CoLaunchConfirmed>
+  <RC_ExtensionAccepted>Extension accepted for {0}. New launch: {1}.</RC_ExtensionAccepted>
+  <RC_ExtensionDeclined>{0} left behind — extension denied.</RC_ExtensionDeclined>
+  <RC_ExtensionTimedOut>Extension timed out — {0} left behind.</RC_ExtensionTimedOut>
+  <RC_LaunchExtendedForRescue>Launch extended to rescue {0}.</RC_LaunchExtendedForRescue>
+  <RC_RequestMoreTime>Request +{0} more time</RC_RequestMoreTime>
+  <RC_PlayerReadyLeavingBehind>{0} is ready — leaving remaining pawns behind.</RC_PlayerReadyLeavingBehind>
+  <RC_PlayerReady>{0} — all pawns aboard.</RC_PlayerReady>
+
+  <!-- Ceremonies -->
+  <RC_AttackDuringCeremony>Attack during ceremony?</RC_AttackDuringCeremony>
+  <RC_AttackDuringCeremonyDesc>Attacking now will interrupt your ceremony. Proceed?</RC_AttackDuringCeremonyDesc>
+  <RC_CeremonyInterrupted>{0} interrupted your ceremony.</RC_CeremonyInterrupted>
+  <RC_CeremonySabotaged>{0} sabotaged your ritual site.</RC_CeremonySabotaged>
+
+  <!-- Combat sync -->
+  <RC_CombatSyncStart>⚔ Cross-territory combat — zone speeds reduced to 1×.</RC_CombatSyncStart>
+  <RC_CombatSyncEnd>⚔ Combat ended — zone speeds restored.</RC_CombatSyncEnd>
+
+  <!-- Gravship events -->
+  <RC_GravshipEventStart>⚠ GRAVSHIP EVENT — All speeds locked to 1×.</RC_GravshipEventStart>
+  <RC_GravshipEventEnd>Gravship event resolved — speeds restored.</RC_GravshipEventEnd>
+
+</LanguageData>

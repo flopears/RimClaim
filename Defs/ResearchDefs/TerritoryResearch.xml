@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!--
+    RC_BasicTerritory has no prerequisites and minimal cost.
+    It is auto-researched at game start via RimClaim.ModInit.
+    Listed here so the research tab shows it as completed.
+  -->
+  <ResearchProjectDef>
+    <defName>RC_BasicTerritory</defName>
+    <label>territorial marking</label>
+    <description>Stake your claim. Enables construction of a basic claim post from any available materials. Every player starts with this researched and one claim post in their inventory.</description>
+    <baseCost>0</baseCost>
+    <techLevel>Neolithic</techLevel>
+    <researchViewX>1</researchViewX>
+    <researchViewY>2</researchViewY>
+  </ResearchProjectDef>
+
+  <!--
+    Tier 2: Powered beacon. Requires Electricity only — we drop Microelectronics
+    so it's reachable early-mid game without a huge research chain.
+  -->
+  <ResearchProjectDef>
+    <defName>RC_TerritorialBeacon</defName>
+    <label>territorial beaconing</label>
+    <description>Powered sovereignty beacons that project a full jurisdiction field. Enables per-claim tick rate control, speed hooks, and complete territorial enforcement.</description>
+    <baseCost>600</baseCost>
+    <techLevel>Industrial</techLevel>
+    <prerequisites>
+      <li>Electricity</li>
+      <li>RC_BasicTerritory</li>
+    </prerequisites>
+    <researchViewX>5</researchViewX>
+    <researchViewY>2</researchViewY>
+  </ResearchProjectDef>
+
+</Defs>
