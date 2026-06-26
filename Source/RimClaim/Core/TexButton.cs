@@ -20,7 +20,8 @@ namespace RimClaim
         public static readonly Texture2D RC_Peace     = LoadTex("RC/UI/Peace");
         public static readonly Texture2D RC_Player    = LoadTex("RC/UI/Player");
         public static readonly Texture2D RC_SpeedHook = LoadTex("RC/UI/SpeedHook");
-        public static readonly Texture2D RC_Warning   = LoadTex("RC/UI/Warning");
+        public static readonly Texture2D RC_Warning      = LoadTex("RC/UI/Warning");
+        public static readonly Texture2D RC_ClaimOverlay = LoadTex("RC/UI/ClaimOverlay");
 
         private static Texture2D LoadTex(string path)
         {

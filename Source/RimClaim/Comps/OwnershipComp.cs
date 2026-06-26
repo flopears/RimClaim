@@ -100,22 +100,8 @@ namespace RimClaim
         public override System.Collections.Generic.IEnumerable<Gizmo> CompGetGizmosExtra()
         {
             if (!MP.IsInMultiplayer) yield break;
-            if (!IsOwnedByLocal && !IsUnclaimed) yield break;
+            if (!IsOwnedByLocal) yield break;
 
-            // "Claim" button for unclaimed things
-            if (IsUnclaimed)
-            {
-                yield return new Command_Action
-                {
-                    defaultLabel = "RC_Claim".Translate(),
-                    defaultDesc  = "RC_ClaimDesc".Translate(),
-                    icon         = TexButton.RC_Claim,
-                    action       = () => SetOwner(RcLocal.PlayerIndex, false)
-                };
-                yield break;
-            }
-
-            // Already owned by local player
             yield return new Command_Action
             {
                 defaultLabel = teamShared ? "RC_Unshare".Translate() : "RC_ShareWithTeam".Translate(),

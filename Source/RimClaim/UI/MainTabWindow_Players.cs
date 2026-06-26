@@ -41,13 +41,15 @@ namespace RimClaim.UI
             var teamRect   = new Rect(inRect.x,          inRect.y, tabBtnW, 30f);
             var enemyRect  = new Rect(inRect.x + tabBtnW, inRect.y, tabBtnW, 30f);
 
-            if (Widgets.ButtonText(teamRect,  "RC_TeamSubTab".Translate(),
-                active: activeSubTab == SubTab.Team))
+            GUI.color = activeSubTab == SubTab.Team ? Color.white : Color.gray;
+            if (Widgets.ButtonText(teamRect,  "RC_TeamSubTab".Translate()))
                 activeSubTab = SubTab.Team;
 
-            if (Widgets.ButtonText(enemyRect, "RC_EnemiesSubTab".Translate(),
-                active: activeSubTab == SubTab.Enemies))
+            GUI.color = activeSubTab == SubTab.Enemies ? Color.white : Color.gray;
+            if (Widgets.ButtonText(enemyRect, "RC_EnemiesSubTab".Translate()))
                 activeSubTab = SubTab.Enemies;
+
+            GUI.color = Color.white;
 
             var contentRect = new Rect(inRect.x, inRect.y + 34f,
                                        inRect.width, inRect.height - 34f);
@@ -99,7 +101,27 @@ namespace RimClaim.UI
             y += 8f;
             if (Widgets.ButtonText(new Rect(0f, y, 140f, 30f), "RC_CreateTeam".Translate()))
             {
-                teams.CreateTeam("New Team");
+                Find.WindowStack.Add(new Dialog_RenameTeam(null, -1,
+                    name => teams.CreateTeam(name)));
+            }
+            y += 38f;
+
+            // Bulk sharing
+            Widgets.DrawLineHorizontal(0f, y, viewRect.width);
+            y += 8f;
+            Widgets.Label(new Rect(0f, y, viewRect.width, 24f), "RC_BulkSharingHeader".Translate());
+            y += 28f;
+
+            float halfW = (viewRect.width - 8f) / 2f;
+            if (Widgets.ButtonText(new Rect(0f, y, halfW, 30f), "RC_ShareAll".Translate()))
+            {
+                var map = Find.CurrentMap;
+                ZoneOwnershipData.For(map)?.BulkSetSharing(RcLocal.PlayerIndex, true);
+            }
+            if (Widgets.ButtonText(new Rect(halfW + 8f, y, halfW, 30f), "RC_UnshareAll".Translate()))
+            {
+                var map = Find.CurrentMap;
+                ZoneOwnershipData.For(map)?.BulkSetSharing(RcLocal.PlayerIndex, false);
             }
 
             Widgets.EndScrollView();
@@ -113,6 +135,7 @@ namespace RimClaim.UI
             foreach (var t in teams.AllTeams)
                 h += 30f + t.memberPlayerIndices.Count * 24f + 200f; // perm checkboxes
             h += 50f; // create button
+            h += 80f; // bulk sharing section
             return h;
         }
 
@@ -138,16 +161,16 @@ namespace RimClaim.UI
                 {
                     if (Widgets.ButtonText(btnRect, "RC_InviteToTeam".Translate()))
                     {
-                        // Create a new team with both players, or add to existing own team
                         var myTeam = GetMyTeam(teams);
                         if (myTeam != null)
                             teams.AddMember(myTeam.teamId, player.playerIndex);
                         else
                         {
-                            teams.CreateTeam("Team");
-                            // We can't get the new teamId synchronously here since
-                            // CreateTeam is a SyncMethod. It'll show up next frame.
-                            // The invite will need a second click — acceptable UX for Phase 1.
+                            int invitee = player.playerIndex;
+                            Find.WindowStack.Add(new Dialog_RenameTeam(null, -1, name =>
+                            {
+                                teams.CreateTeam(name);
+                            }));
                         }
                     }
                 }
@@ -164,9 +187,16 @@ namespace RimClaim.UI
             float y = startRect.y;
             float w = startRect.width;
 
-            // Team header
-            var headerRect = new Rect(0f, y, w - 70f, 28f);
-            Widgets.Label(headerRect, team.teamName);
+            // Team header — click name to rename
+            var nameRect = new Rect(0f, y, w - 140f, 28f);
+            Widgets.Label(nameRect, team.teamName);
+            if (Widgets.ButtonInvisible(nameRect))
+            {
+                Find.WindowStack.Add(new Dialog_RenameTeam(team.teamName, team.teamId,
+                    name => RcWorld.Teams.RenameTeam(team.teamId, name)));
+            }
+            TooltipHandler.TipRegion(nameRect, "RC_RenameTeamTip".Translate());
+
             if (Widgets.ButtonText(new Rect(w - 68f, y, 64f, 26f), "RC_DisbandTeam".Translate()))
             {
                 RcWorld.Teams.DisbandTeam(team.teamId);
@@ -255,20 +285,42 @@ namespace RimClaim.UI
             var diplo    = RcWorld.Diplomacy_Safe;
             if (registry == null || diplo == null) return;
 
-            float rowH    = Constants.PlayerRowHeight + 4f;
-            var viewRect  = new Rect(0f, 0f, rect.width - 20f,
-                               registry.ConnectedPlayers().Count * rowH + 40f);
+            float rowH = Constants.PlayerRowHeight + 4f;
+            var others = registry.ConnectedPlayers()
+                .FindAll(p => p.playerIndex != RcLocal.PlayerIndex);
+            float historyH = 0f;
+            foreach (var p in others)
+            {
+                var events = diplo.GetHistoryBetween(RcLocal.PlayerIndex, p.playerIndex);
+                historyH += events.Count * 20f;
+            }
+
+            var viewRect = new Rect(0f, 0f, rect.width - 20f,
+                others.Count * (rowH + 28f) + historyH + 40f);
             Widgets.BeginScrollView(rect, ref enemyScroll, viewRect);
 
             float y = 0f;
-            foreach (var player in registry.ConnectedPlayers())
+            foreach (var player in others)
             {
-                if (player.playerIndex == RcLocal.PlayerIndex) continue;
-
                 bool isEnemy = diplo.AreEnemies(RcLocal.PlayerIndex, player.playerIndex);
                 DrawEnemyRow(new Rect(0f, y, viewRect.width, Constants.PlayerRowHeight),
                              player, isEnemy, diplo);
                 y += rowH;
+
+                var events = diplo.GetHistoryBetween(RcLocal.PlayerIndex, player.playerIndex);
+                if (events.Count > 0)
+                {
+                    GUI.color = Color.gray;
+                    for (int i = events.Count - 1; i >= 0 && i >= events.Count - 5; i--)
+                    {
+                        string dayLabel = $"Day {events[i].tickOccurred / 60000}";
+                        Widgets.Label(new Rect(10f, y, viewRect.width - 10f, 20f),
+                            $"  {dayLabel}: {events[i].GetLabel(registry)}");
+                        y += 20f;
+                    }
+                    GUI.color = Color.white;
+                    y += 8f;
+                }
             }
 
             Widgets.EndScrollView();

@@ -30,20 +30,16 @@ namespace RimClaim
 
         // ── Public read API ────────────────────────────────────────────────────
 
-        public DiplomacyState GetRelation(int a, int b)
-        {
-            string key = MakeKey(a, b);
-            int idx = relationKeys.IndexOf(key);
-            return idx >= 0 ? (DiplomacyState)relationValues[idx] : DiplomacyState.Neutral;
-        }
+        public DiplomacyState GetRelation(int from, int to)
+            => GetRelationDirected(from, to);
 
         /// <summary>
         /// True if EITHER player has declared the other an enemy.
         /// This is the condition that activates PVP.
         /// </summary>
         public bool AreEnemies(int a, int b)
-            => GetRelation(a, b) == DiplomacyState.Enemy ||
-               GetRelation(b, a) == DiplomacyState.Enemy;
+            => GetRelationDirected(a, b) == DiplomacyState.Enemy ||
+               GetRelationDirected(b, a) == DiplomacyState.Enemy;
 
         // ── Synced mutations ───────────────────────────────────────────────────
 
@@ -57,14 +53,16 @@ namespace RimClaim
 
             SetRelationInternal(fromPlayer, toPlayer, state);
             ApplyFactionRelation(fromPlayer, toPlayer);
+
+            if (state == DiplomacyState.Enemy)
+                RecordEvent(fromPlayer, toPlayer, DiplomacyEventType.DeclaredEnemy);
         }
 
         public void DeclarePeace(int fromPlayer, int toPlayer)
         {
-            // One-sided peace — only resets THIS player's stance
-            // Both sides must declare peace to fully end PVP
             SetRelationInternal(fromPlayer, toPlayer, DiplomacyState.Neutral);
             ApplyFactionRelation(fromPlayer, toPlayer);
+            RecordEvent(fromPlayer, toPlayer, DiplomacyEventType.PeaceDeclared);
         }
 
         // ── Internal helpers ───────────────────────────────────────────────────
@@ -107,19 +105,34 @@ namespace RimClaim
             factionB.SetRelationDirect(factionA, kind);
         }
 
-        // ── Utility ────────────────────────────────────────────────────────────
-
-        // Canonical key — A < B — used only for symmetric read
-        private static string MakeKey(int a, int b)
-            => a < b ? $"{a}:{b}" : $"{b}:{a}";
-
         // ── Diplomatic history ─────────────────────────────────────────────────
+
+        private List<DiplomacyRecord> history = new();
+
+        public IReadOnlyList<DiplomacyRecord> History => history;
+
+        public List<DiplomacyRecord> GetHistoryBetween(int playerA, int playerB)
+        {
+            var result = new List<DiplomacyRecord>();
+            foreach (var r in history)
+            {
+                if ((r.fromPlayer == playerA && r.toPlayer == playerB) ||
+                    (r.fromPlayer == playerB && r.toPlayer == playerA))
+                    result.Add(r);
+            }
+            return result;
+        }
 
         public void RecordEvent(int fromPlayer, int toPlayer,
             DiplomacyEventType type)
         {
-            Log.Message($"[RC] Diplomatic event: Player {fromPlayer} → Player {toPlayer}: {type}");
-            // Full history log would be stored and displayed in Players tab
+            history.Add(new DiplomacyRecord
+            {
+                fromPlayer = fromPlayer,
+                toPlayer   = toPlayer,
+                eventType  = type,
+                tickOccurred = GenTicks.TicksGame,
+            });
         }
 
         public void RecordCeremonyInterruption(int attackerPlayer,
@@ -136,8 +149,10 @@ namespace RimClaim
             base.ExposeData();
             Scribe_Collections.Look(ref relationKeys,   "rKeys",   LookMode.Value);
             Scribe_Collections.Look(ref relationValues, "rValues", LookMode.Value);
+            Scribe_Collections.Look(ref history,        "history", LookMode.Deep);
             relationKeys   ??= new List<string>();
             relationValues ??= new List<int>();
+            history        ??= new List<DiplomacyRecord>();
         }
 }
 }

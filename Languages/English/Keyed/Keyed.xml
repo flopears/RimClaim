@@ -17,9 +17,11 @@
   <RC_TooManyClaims>Cannot place — you already have the maximum number of claims ({0}).</RC_TooManyClaims>
   <RC_ZoneRequiresClaim>Zones can only be placed inside your territory claim.</RC_ZoneRequiresClaim>
   <RC_CantBuildEnemyTerritory>Cannot build inside enemy territory.</RC_CantBuildEnemyTerritory>
+  <RC_ShowClaims>Toggle territory claim overlay</RC_ShowClaims>
   <RC_SpeedHook>Hook Speed Buttons</RC_SpeedHook>
   <RC_SpeedHookDesc>When enabled, the game speed buttons control this claim's tick rate instead of global speed. Space pauses/unpauses your claim only.</RC_SpeedHookDesc>
   <RC_SpeedLockedGravshipEvent>Speed is locked during a gravship event.</RC_SpeedLockedGravshipEvent>
+  <RC_ClaimSpeedStat>Territory zone speed</RC_ClaimSpeedStat>
   <RC_MapEventWarning>Event active — running at {0}× costs more inside your claim. Effects and damage progress faster.</RC_MapEventWarning>
 
   <!-- Pause system -->
@@ -36,8 +38,13 @@
   <RC_EnemiesSubTab>Enemies</RC_EnemiesSubTab>
   <RC_CreateTeam>Form Team</RC_CreateTeam>
   <RC_DisbandTeam>Disband</RC_DisbandTeam>
+  <RC_TeamNameLabel>Team name:</RC_TeamNameLabel>
+  <RC_RenameTeamTip>Click to rename this team.</RC_RenameTeamTip>
   <RC_InviteToTeam>Invite</RC_InviteToTeam>
   <RC_LeaveTeam>Leave Team</RC_LeaveTeam>
+  <RC_BulkSharingHeader>Building Sharing (current map):</RC_BulkSharingHeader>
+  <RC_ShareAll>Share All</RC_ShareAll>
+  <RC_UnshareAll>Unshare All</RC_UnshareAll>
 
   <!-- Permissions -->
   <RC_Perm_Resources>Share Resources</RC_Perm_Resources>

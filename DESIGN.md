@@ -79,6 +79,8 @@ Parallel system for zones (not ThingWithComps).
 - Zones auto-claim to drawer on first cell placed
 - Items inherit stockpile ownership when hauled in
 - Items stamped with buyer's playerIndex on trade completion
+- No manual Claim gizmo — ownership flows automatically from the above rules
+- Owners see Share/Unshare and Release gizmos on things they own
 
 ### Steal System
 - AI haul of owned items: silently blocked
@@ -101,11 +103,13 @@ Suppressed if items land inside another player's claim.
 
 **Claim Post** — Tier 1, Neolithic research, 1×1, no power, 15-tile radius.
   Stuffable: Metallic/Stony/Woody. 75 stuff units. No component cost.
-  No tick control. Basic ownership enforcement only.
+  Per-zone tick rate control (1×/2×/3×). Speed hook. Ownership enforcement.
+  Auto-registers claim zone immediately on construction.
 
 **Landclaim Block** — Tier 2, Industrial research, 2×2, 200W power, 25-tile radius.
   Stuffable: Metallic/Stony/Woody. 150 stuff + 4 CompIndustrial + 30 Plasteel.
-  Full tick rate control. Speed hook. Breakdownable.
+  Per-zone tick rate control (1×/2×/3×). Speed hook. Breakdownable.
+  Auto-registers claim zone immediately on construction.
 
 **Material effects on HP (base 300 for beacon, 150 for post):**
 | Material | HP Factor | Flammable | Notes |
@@ -623,14 +627,19 @@ RimClaim/
 PlayerRegistry, TeamRegistry, DiplomacyRegistry, OwnershipComp,
 ZoneOwnershipData, basic Harmony patches, Players tab UI.
 
-### Phase 2 — Territory (current)
+### Phase 2 — Territory ✓ (built)
 LandclaimBlock, ClaimPost, LandclaimRegistry, LandclaimZone,
-tick suppression/multiplication, SpeedHookManager, zone/build enforcement,
-combat sync, prisoner escape sync, enemy pathfinder block, steal system.
+tick multiplication (reflection + comp fallback), tick suppression (paused zones),
+SpeedHookManager, zone/build enforcement, combat sync, prisoner escape sync.
+Zone pause gizmo (0x/1x/2x/3x). Door ownership patch covers pathfinder block.
+Steal system deferred (RimWorld 1.6 FloatMenuContext API change).
 
-### Phase 3 — Pause Refinement
-SpeedNegotiator redesign (per-map not global), soft pause request UI,
-emergency pause budget UI, pause during PVP lock.
+### Phase 3 — Pause Refinement (current)
+SpeedNegotiator (3-tier: negotiation, soft pause, emergency pause),
+soft pause request UI (notification banner with Allow/Object buttons),
+emergency pause budget UI (top-right HUD with remaining count),
+pause during PVP lock. Per-map SpeedNegotiator deferred pending
+Zetrith async-time API integration.
 
 ### Phase 4 — Transport
 CaravanOwnerComp, CaravanStepComp, CaravanRegistry, GravshipOwnerComp,

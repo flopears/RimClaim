@@ -5,7 +5,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>RC_ClaimPost</defName>
     <label>claim post</label>
-    <description>A simple territorial marker built from available materials. Establishes basic ownership and a 15-tile claim radius. No tick rate control. Upgrade to a Territory Beacon for full features including speed hooks and a larger field.</description>
+    <description>A simple territorial marker. Establishes a 15-tile claim zone with ownership enforcement and per-zone speed control. Upgrade to a Territory Beacon for a larger claim radius.</description>
     <thingClass>RimClaim.Building_LandclaimBlock</thingClass>
     <category>Building</category>
     <designationCategory>Misc</designationCategory>
@@ -73,6 +73,10 @@
     <selectable>true</selectable>
     <tickerType>Rare</tickerType>
     <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>200</basePowerConsumption>
+      </li>
       <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>

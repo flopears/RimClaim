@@ -79,6 +79,18 @@ namespace RimClaim
                 zoneShared[zoneId] = shared;
         }
 
+        // ── Bulk sharing ──────────────────────────────────────────────────────
+        [SyncMethod]
+        public void BulkSetSharing(int playerIndex, bool shared)
+        {
+            foreach (var thing in map.listerBuildings.allBuildingsColonist)
+            {
+                var comp = thing.TryGetComp<OwnershipComp>();
+                if (comp != null && comp.ownerPlayerIndex == playerIndex)
+                    comp.teamShared = shared;
+            }
+        }
+
         // ── Cleanup: remove data for deleted zones ─────────────────────────────
         public void OnZoneDeleted(Zone zone)
         {

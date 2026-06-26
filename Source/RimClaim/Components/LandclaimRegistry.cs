@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using Multiplayer.API;
 using RimWorld;
 using UnityEngine;
@@ -9,6 +10,23 @@ namespace RimClaim
 {
     public class LandclaimRegistry : MapComponent
     {
+        // ── Reflection for calling protected Tick/TickRare/TickLong ────────────
+        private static readonly System.Reflection.MethodInfo s_tick =
+            AccessTools.Method(typeof(Thing), "Tick");
+        private static readonly System.Reflection.MethodInfo s_tickRare =
+            AccessTools.Method(typeof(Thing), "TickRare");
+        private static readonly System.Reflection.MethodInfo s_tickLong =
+            AccessTools.Method(typeof(Thing), "TickLong");
+        private static readonly object[] s_noArgs = System.Array.Empty<object>();
+        private static readonly bool s_canReflect =
+            s_tick != null && s_tickRare != null && s_tickLong != null;
+
+        static LandclaimRegistry()
+        {
+            if (!s_canReflect)
+                Log.Warning("[RimClaim] Reflection lookup failed — tick multiplication disabled.");
+        }
+
         // ── State ──────────────────────────────────────────────────────────────
         private List<LandclaimZone>      zones          = new();
         private List<TemporaryLandclaim> tempClaims     = new();
@@ -18,7 +36,14 @@ namespace RimClaim
         // Cached set of thingIDs inside any claim — rebuilt each tick boundary
         private HashSet<int> claimedThingIds = new();
 
+        // Fast-path flag: true if any zone on any map has rate 0
+        private static bool s_anyMapHasPaused = false;
+
+        public static bool AnyPausedZones => s_anyMapHasPaused;
+
         public bool gravshipEventActive = false;
+
+        public int ZoneVersion { get; private set; } = 0;
 
         public LandclaimRegistry(Map map) : base(map) { }
 
@@ -74,6 +99,7 @@ namespace RimClaim
             {
                 existing.bounds = bounds;
                 existing.active = true;
+                ZoneVersion++;
                 return;
             }
 
@@ -84,28 +110,37 @@ namespace RimClaim
                 active           = true,
                 localTickRate    = 1,
             });
+            ZoneVersion++;
             RebuildClaimedThingIds();
         }
 
         public void UnregisterZone(int ownerPlayerIndex)
         {
             zones.RemoveAll(z => z.ownerPlayerIndex == ownerPlayerIndex);
+            ZoneVersion++;
             RebuildClaimedThingIds();
         }
 
         public void SetZoneActive(int ownerPlayerIndex, bool active)
         {
             var zone = GetZoneByOwner(ownerPlayerIndex);
-            if (zone != null) zone.active = active;
+            if (zone == null || zone.active == active) return;
+            zone.active = active;
+            ZoneVersion++;
         }
+
+        public void NotifyPauseChanged() => RefreshPausedFlag();
 
         public void SetLocalTickRate(int ownerPlayerIndex, int rate)
         {
             var zone = GetZoneByOwner(ownerPlayerIndex);
             if (zone == null) return;
             if (zone.IsLocked) return;
+            int oldRate = zone.localTickRate;
             zone.localTickRate = Mathf.Clamp(rate,
                 0, Constants.MaxLocalTickRate);
+            if ((oldRate == 0) != (zone.localTickRate == 0))
+                RefreshPausedFlag();
         }
 
         public void SetSpeedHookActive(int ownerPlayerIndex, bool active)
@@ -201,6 +236,48 @@ namespace RimClaim
             });
         }
 
+        // ── Pause snapshots ────────────────────────────────────────────────────
+        private Dictionary<int, PawnSnapshot> pauseSnapshots = new();
+
+        private struct PawnSnapshot
+        {
+            public Dictionary<string, float> needs;
+            public long ageBio;
+            public long ageChrono;
+        }
+
+        private void SnapshotPawn(Pawn p)
+        {
+            if (pauseSnapshots.ContainsKey(p.thingIDNumber)) return;
+            var snap = new PawnSnapshot
+            {
+                needs = new Dictionary<string, float>(),
+                ageBio = p.ageTracker.AgeBiologicalTicks,
+                ageChrono = p.ageTracker.AgeChronologicalTicks,
+            };
+            if (p.needs?.AllNeeds != null)
+            {
+                foreach (var need in p.needs.AllNeeds)
+                    snap.needs[need.def.defName] = need.CurLevel;
+            }
+            pauseSnapshots[p.thingIDNumber] = snap;
+        }
+
+        private void RestorePawn(Pawn p)
+        {
+            if (!pauseSnapshots.TryGetValue(p.thingIDNumber, out var snap)) return;
+            if (p.needs?.AllNeeds != null)
+            {
+                foreach (var need in p.needs.AllNeeds)
+                {
+                    if (snap.needs.TryGetValue(need.def.defName, out float val))
+                        need.CurLevel = val;
+                }
+            }
+            p.ageTracker.AgeBiologicalTicks = snap.ageBio;
+            p.ageTracker.AgeChronologicalTicks = snap.ageChrono;
+        }
+
         // ── MapComponentTick ───────────────────────────────────────────────────
         private int tickCounter = 0;
 
@@ -208,22 +285,139 @@ namespace RimClaim
         {
             tickCounter++;
 
-            // NOTE: Per-claim tick multiplication is DISABLED pending a safe
-            // async-time-based reimplementation. zone.ProcessTick is not called.
-            // Speed hook buttons still set localTickRate (stored, displayed) but
-            // do not yet multiply ticks. Zones tick at global rate for now.
+            // Freeze pawns in paused zones: snapshot on first tick, restore every tick
+            for (int z = 0; z < zones.Count; z++)
+            {
+                var zone = zones[z];
+                if (!zone.active || zone.localTickRate != 0) continue;
+                foreach (var cell in zone.bounds)
+                {
+                    if (!cell.InBounds(map)) continue;
+                    var things = map.thingGrid.ThingsListAtFast(cell);
+                    for (int i = 0; i < things.Count; i++)
+                    {
+                        if (things[i] is Pawn p && p.Position == cell)
+                        {
+                            SnapshotPawn(p);
+                            RestorePawn(p);
+                        }
+                    }
+                }
+            }
 
-            // Resolve combat syncs
+            // Tick multiplication: extra Tick() calls for zones running > 1x
+            if (s_canReflect)
+            {
+                for (int z = 0; z < zones.Count; z++)
+                {
+                    var zone = zones[z];
+                    if (!zone.active || zone.localTickRate <= 1) continue;
+
+                    int extra = zone.localTickRate - 1;
+                    TickZone(zone, extra, TickerType.Normal);
+
+                    zone.rareDebt += extra;
+                    while (zone.rareDebt >= 250)
+                    {
+                        zone.rareDebt -= 250;
+                        TickZone(zone, 1, TickerType.Rare);
+                    }
+
+                    zone.longDebt += extra;
+                    while (zone.longDebt >= 2000)
+                    {
+                        zone.longDebt -= 2000;
+                        TickZone(zone, 1, TickerType.Long);
+                    }
+                }
+            }
+
+            // Clear snapshots for pawns no longer in paused zones
+            if (tickCounter % 60 == 0 && pauseSnapshots.Count > 0)
+            {
+                var toRemove = new List<int>();
+                foreach (var kvp in pauseSnapshots)
+                {
+                    var thing = map.listerThings.AllThings
+                        .FirstOrDefault(t => t.thingIDNumber == kvp.Key);
+                    if (thing == null || !thing.Spawned) { toRemove.Add(kvp.Key); continue; }
+                    var pZone = GetZoneAt(thing.Position);
+                    if (pZone == null || pZone.localTickRate != 0)
+                        toRemove.Add(kvp.Key);
+                }
+                foreach (var id in toRemove) pauseSnapshots.Remove(id);
+            }
+
             if (tickCounter % Constants.CombatSyncResolveInterval == 0)
                 ResolveCombatSyncs();
 
-            // Resolve escape syncs
             if (tickCounter % Constants.EscapeSyncResolveInterval == 0)
                 ResolveEscapeSyncs();
 
-            // Expire temp claims
             if (tickCounter % 120 == 0)
                 ExpireTempClaims();
+        }
+
+        // ── Tick multiplication ───────────────────────────────────────────────
+        private void TickZone(LandclaimZone zone, int count, TickerType type)
+        {
+            Patches.TickSuppressor.InExtraTick = true;
+            try
+            {
+                var method = type switch
+                {
+                    TickerType.Rare => s_tickRare,
+                    TickerType.Long => s_tickLong,
+                    _              => s_tick,
+                };
+
+                foreach (var cell in zone.bounds)
+                {
+                    if (!cell.InBounds(map)) continue;
+                    var things = map.thingGrid.ThingsListAtFast(cell);
+                    for (int i = things.Count - 1; i >= 0; i--)
+                    {
+                        var thing = things[i];
+                        if (thing.Destroyed || thing.Position != cell) continue;
+
+                        bool match = type == TickerType.Normal
+                            ? (thing.def.tickerType == TickerType.Normal || thing is Pawn)
+                            : thing.def.tickerType == type;
+                        if (!match) continue;
+
+                        for (int t = 0; t < count; t++)
+                        {
+                            if (thing.Destroyed) break;
+                            try { method.Invoke(thing, s_noArgs); }
+                            catch (System.Exception e)
+                            {
+                                Log.ErrorOnce(
+                                    $"[RC] Extra {type} tick on {thing}: {(e.InnerException ?? e).Message}",
+                                    thing.thingIDNumber ^ 0x7C3A1);
+                            }
+                        }
+                    }
+                }
+            }
+            finally { Patches.TickSuppressor.InExtraTick = false; }
+        }
+
+        private void RefreshPausedFlag()
+        {
+            s_anyMapHasPaused = false;
+            foreach (var m in Find.Maps)
+            {
+                var reg = For(m);
+                if (reg == null) continue;
+                foreach (var z in reg.zones)
+                {
+                    if (z.active && z.localTickRate == 0)
+                    {
+                        s_anyMapHasPaused = true;
+                        return;
+                    }
+                }
+            }
         }
 
         private void ResolveCombatSyncs()

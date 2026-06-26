@@ -1,4 +1,3 @@
-using Multiplayer.API;
 using Verse;
 
 namespace RimClaim
@@ -12,11 +11,6 @@ namespace RimClaim
     {
         public static int MapTicks(this Map map)
         {
-            if (MP.enabled)
-            {
-                try { return map.MapTicks(); }
-                catch { /* fallthrough */ }
-            }
             return Find.TickManager?.TicksGame ?? 0;
         }
     }

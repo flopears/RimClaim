@@ -17,7 +17,8 @@ namespace RimClaim
 
         // ── Tick rate ──────────────────────────────────────────────────────────
         public int       localTickRate    = 1;    // 0=paused, 1=normal, 2=2x, 3=3x
-        public float     tickDebt         = 0f;
+        public float     rareDebt         = 0f;
+        public float     longDebt         = 0f;
 
         // ── Sync locks ─────────────────────────────────────────────────────────
         public bool      tradeLockActive       = false;
@@ -34,6 +35,9 @@ namespace RimClaim
         public bool      gravshipEventLockActive = false;
         public int       preGravshipEventRate    = 1;
 
+        public bool      globalPauseLockActive   = false;
+        public int       preGlobalPauseRate      = 1;
+
         public bool      mapEventLockActive     = false;
 
         // ── Speed hook ─────────────────────────────────────────────────────────
@@ -41,7 +45,8 @@ namespace RimClaim
 
         // ── Convenience ────────────────────────────────────────────────────────
         public bool IsLocked => tradeLockActive || combatSyncActive ||
-                                escapeSyncActive || gravshipEventLockActive;
+                                escapeSyncActive || gravshipEventLockActive ||
+                                globalPauseLockActive;
 
         public Color GetBorderColor(int viewerPlayerIndex)
         {
@@ -64,27 +69,6 @@ namespace RimClaim
             return Color.gray;
         }
 
-        // ── Tick debt processing ───────────────────────────────────────────────
-        public void ProcessTick(Map map, HashSet<int> claimedThingIds)
-        {
-            if (!active || localTickRate == 0) return;
-
-            tickDebt += localTickRate;
-
-            while (tickDebt >= 1f)
-            {
-                TickThingsInBounds(map, claimedThingIds);
-                tickDebt -= 1f;
-            }
-        }
-
-        private void TickThingsInBounds(Map map, HashSet<int> claimedThingIds)
-        {
-            // DISABLED: per-claim tick multiplication is not active.
-            // Thing.Tick() is protected and cannot be called directly anyway.
-            // A safe reimplementation must use Zetrith async-time map registration.
-        }
-
         // ── Serialization ──────────────────────────────────────────────────────
         public void ExposeData()
         {
@@ -92,7 +76,8 @@ namespace RimClaim
             Scribe_Values.Look(ref bounds,                  "bounds");
             Scribe_Values.Look(ref active,                  "active",                  true);
             Scribe_Values.Look(ref localTickRate,           "localTickRate",           1);
-            Scribe_Values.Look(ref tickDebt,                "tickDebt",                0f);
+            Scribe_Values.Look(ref rareDebt,                "rareDebt",                0f);
+            Scribe_Values.Look(ref longDebt,                "longDebt",                0f);
             Scribe_Values.Look(ref tradeLockActive,         "tradeLockActive",         false);
             Scribe_Values.Look(ref preTradTickRate,         "preTradTickRate",         1);
             Scribe_Values.Look(ref combatSyncActive,        "combatSyncActive",        false);
@@ -103,6 +88,8 @@ namespace RimClaim
             Scribe_Values.Look(ref escapeeThingId,          "escapeeThingId",          -1);
             Scribe_Values.Look(ref gravshipEventLockActive, "gravshipEventLockActive", false);
             Scribe_Values.Look(ref preGravshipEventRate,    "preGravshipEventRate",    1);
+            Scribe_Values.Look(ref globalPauseLockActive,   "globalPauseLockActive",   false);
+            Scribe_Values.Look(ref preGlobalPauseRate,      "preGlobalPauseRate",      1);
             Scribe_Values.Look(ref speedHookActive,         "speedHookActive",         false);
         }
     }

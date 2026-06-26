@@ -181,7 +181,21 @@ namespace RimClaim
         {
             if (!isPaused) return;
             isPaused = false;
-            Find.TickManager.CurTimeSpeed = TimeSpeed.Normal;
+
+            foreach (var map in Find.Maps)
+            {
+                var reg = LandclaimRegistry.For(map);
+                if (reg == null) continue;
+                foreach (var zone in reg.AllZones)
+                {
+                    if (zone.globalPauseLockActive)
+                    {
+                        zone.localTickRate = zone.preGlobalPauseRate;
+                        zone.globalPauseLockActive = false;
+                    }
+                }
+            }
+
             ApplyNegotiatedSpeed();
         }
 
@@ -190,7 +204,22 @@ namespace RimClaim
         private void ExecutePause()
         {
             isPaused = true;
-            Find.TickManager.CurTimeSpeed = TimeSpeed.Paused;
+
+            foreach (var map in Find.Maps)
+            {
+                var reg = LandclaimRegistry.For(map);
+                if (reg == null) continue;
+                foreach (var zone in reg.AllZones)
+                {
+                    if (!zone.globalPauseLockActive)
+                    {
+                        zone.preGlobalPauseRate = zone.localTickRate;
+                        zone.globalPauseLockActive = true;
+                    }
+                    zone.localTickRate = 0;
+                }
+                reg.NotifyPauseChanged();
+            }
         }
 
         // ── Tick: process soft-pause timeout ──────────────────────────────────

@@ -13,6 +13,7 @@ namespace RimClaim
     public static class SpeedHookManager
     {
         private static Building_LandclaimBlock? hookedClaim = null;
+        private static int prePauseRate = 1;
 
         public static bool IsHooked  => hookedClaim != null;
         public static int? HookedRate =>
@@ -65,8 +66,16 @@ namespace RimClaim
             var zone = registry.GetZoneByOwner(RcLocal.PlayerIndex);
             if (zone == null) return false;
 
-            int newRate = zone.localTickRate == 0 ? zone.preTradTickRate : 0;
-            if (newRate == 0) zone.preTradTickRate = zone.localTickRate;
+            int newRate;
+            if (zone.localTickRate == 0)
+            {
+                newRate = prePauseRate > 0 ? prePauseRate : 1;
+            }
+            else
+            {
+                prePauseRate = zone.localTickRate;
+                newRate = 0;
+            }
             registry.SetLocalTickRate(RcLocal.PlayerIndex, newRate);
             return true;
         }

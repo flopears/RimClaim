@@ -20,7 +20,6 @@ namespace RimClaim.Patches
         public static void Postfix(Thing __result, IntVec3 loc, Map map)
         {
             if (!MP.IsInMultiplayer) return;
-            if (!Constants.HaulingInheritsOwnership) return;
             if (__result == null || map == null) return;
             if (__result.def.category != ThingCategory.Item) return;
 

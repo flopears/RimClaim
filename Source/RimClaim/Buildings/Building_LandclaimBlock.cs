@@ -20,10 +20,25 @@ namespace RimClaim
             try
             {
                 base.SpawnSetup(map, respawningAfterLoad);
-                Log.Message($"[RimClaim] Building_LandclaimBlock.SpawnSetup: def={def?.defName}, pos={Position}, respawn={respawningAfterLoad}, map={map?.uniqueID}");
 
                 if (!respawningAfterLoad && !zoneInitialized)
+                {
                     placedAtTick = GenTicks.TicksGame;
+
+                    if (MP.IsInMultiplayer)
+                    {
+                        int ownerIdx = this.Faction?.loadID ?? -1;
+                        if (ownerIdx >= 0)
+                        {
+                            zoneInitialized = true;
+                            DoRegisterZone(ownerIdx);
+                        }
+                    }
+                    else
+                    {
+                        zoneInitialized = true;
+                    }
+                }
             }
             catch (System.Exception e)
             {
@@ -37,7 +52,6 @@ namespace RimClaim
             {
                 base.PostMake();
                 graceperiodActive = true;
-                Log.Message("[RimClaim] Building_LandclaimBlock.PostMake completed.");
             }
             catch (System.Exception e)
             {
@@ -64,10 +78,11 @@ namespace RimClaim
                 return;
             }
 
-            int radius = RcMod.Settings?.DefaultClaimRadius ?? Constants.DefaultClaimRadius;
+            bool isBeacon = def.defName == "RC_LandclaimBlock";
+            int radius = isBeacon
+                ? (RcMod.Settings?.DefaultClaimRadius ?? Constants.DefaultClaimRadius)
+                : Constants.DefaultPostRadius;
             var proposed = CellRect.CenteredOn(Position, radius);
-
-            Log.Message($"[RimClaim] Proposed zone: center={Position}, radius={radius}, rect={proposed}");
 
             if (registry.OverlapsExistingClaim(proposed, playerIndex))
             {
@@ -84,7 +99,6 @@ namespace RimClaim
             }
 
             registry.RegisterZone(playerIndex, proposed);
-            Log.Message($"[RimClaim] Zone registered for player {playerIndex}");
         }
 
         // ── TickRare: fires every ~250 ticks for ALL buildings ─────────────
@@ -98,22 +112,31 @@ namespace RimClaim
                     GenTicks.TicksGame - placedAtTick > Constants.ClaimGracePeriodTicks)
                     graceperiodActive = false;
 
-                // Zone registration — deferred from SpawnSetup to here
-                // because we need tick context and map to be fully ready.
-                if (!zoneInitialized && Spawned)
+                // Power check — suspend claim when power lost (Tier 2 only)
+                if (zoneInitialized && MP.IsInMultiplayer)
                 {
-                    if (!MP.IsInMultiplayer)
+                    var powerComp = GetComp<CompPowerTrader>();
+                    if (powerComp != null)
                     {
-                        zoneInitialized = true;
-                        return;
+                        int ownerIdx = this.Faction?.loadID ?? -1;
+                        if (ownerIdx >= 0)
+                        {
+                            var registry = LandclaimRegistry.For(Map);
+                            var zone = registry?.GetZoneByOwner(ownerIdx);
+                            if (zone != null && zone.active != powerComp.PowerOn)
+                                registry!.SetZoneActive(ownerIdx, powerComp.PowerOn);
+                        }
                     }
+                }
 
-                    int localIdx = RcLocal.PlayerIndex;
-                    if (localIdx < 0) return; // session not ready yet
+                // Fallback: if SpawnSetup couldn't register (faction not ready)
+                if (!zoneInitialized && Spawned && MP.IsInMultiplayer)
+                {
+                    int ownerIdx = this.Faction?.loadID ?? -1;
+                    if (ownerIdx < 0) return;
 
-                    Log.Message($"[RimClaim] TickRare — registering zone for player {localIdx}");
                     zoneInitialized = true;
-                    DoRegisterZone(localIdx);
+                    DoRegisterZone(ownerIdx);
                 }
             }
             catch (System.Exception e)
@@ -134,7 +157,7 @@ namespace RimClaim
         {
             if (!MP.IsInMultiplayer) return;
             var registry = LandclaimRegistry.For(Map);
-            registry?.UnregisterZone(RcLocal.PlayerIndex);
+            registry?.UnregisterZone(this.Faction?.loadID ?? -1);
             zoneInitialized = false;
         }
 
@@ -146,7 +169,7 @@ namespace RimClaim
                 if (MP.IsInMultiplayer && zoneInitialized)
                 {
                     var registry = LandclaimRegistry.For(Map);
-                    registry?.UnregisterZone(RcLocal.PlayerIndex);
+                    registry?.UnregisterZone(this.Faction?.loadID ?? -1);
                 }
             }
             catch (System.Exception e)
@@ -170,8 +193,14 @@ namespace RimClaim
             var myZone = registry?.GetZoneByOwner(localIdx);
             if (myZone == null) yield break;
 
-            bool isBeacon = def.defName == "RC_LandclaimBlock";
-            if (!isBeacon) yield break;
+            bool isPaused = myZone.localTickRate == 0;
+            yield return new Command_Action
+            {
+                defaultLabel = isPaused ? "[⏸]" : "⏸",
+                defaultDesc = "Pause this claim zone. Nothing inside ticks.",
+                Disabled = myZone.IsLocked,
+                action = () => registry!.SetLocalTickRate(localIdx, 0)
+            };
 
             for (int rate = 1; rate <= Constants.MaxLocalTickRate; rate++)
             {
@@ -215,8 +244,7 @@ namespace RimClaim
             if (myZone != null)
             {
                 sb.AppendLine(myZone.active ? "Claim field: Active" : "Claim field: Inactive");
-                if (def.defName == "RC_LandclaimBlock")
-                    sb.AppendLine($"Zone speed: {myZone.localTickRate}x");
+                sb.AppendLine($"Zone speed: {myZone.localTickRate}x");
                 if (myZone.IsLocked)
                     sb.AppendLine("Speed locked");
             }

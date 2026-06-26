@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Patch>
 
-  <!--
-    OWNERSHIP COMP INJECTION
-    Adds CompProperties_Ownership to buildings and items.
+  <!-- ── Buildings with existing <comps> ─────────────────────────────── -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[category="Building" and comps and not(comps/li[@Class="RimClaim.CompProperties_Ownership"])]/comps</xpath>
+    <value>
+      <li Class="RimClaim.CompProperties_Ownership" />
+    </value>
+  </Operation>
 
-    Uses PatchOperationConditional to check if a <comps> node exists:
-    - If it exists, append our comp to it.
-    - If it doesn't, create <comps> with our comp inside.
-    This prevents the silent xpath-fail that breaks def loading.
-
-    success="Always" so a no-match never errors the whole patch file.
-  -->
-
-  <!-- ── Buildings ────────────────────────────────────────────────────── -->
-  <Operation Class="PatchOperationConditional">
-    <xpath>Defs/ThingDef[category="Building"]/comps</xpath>
-    <match Class="PatchOperationAdd">
-      <xpath>Defs/ThingDef[category="Building" and not(comps/li[@Class="RimClaim.CompProperties_Ownership"])]/comps</xpath>
-      <value>
+  <!-- ── Buildings without <comps> ───────────────────────────────────── -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[category="Building" and not(comps)]</xpath>
+    <value>
+      <comps>
         <li Class="RimClaim.CompProperties_Ownership" />
-      </value>
-    </match>
-    <nomatch Class="PatchOperationAdd">
-      <xpath>Defs/ThingDef[category="Building" and not(comps)]</xpath>
-      <value>
-        <comps>
-          <li Class="RimClaim.CompProperties_Ownership" />
-        </comps>
-      </value>
-    </nomatch>
+      </comps>
+    </value>
+  </Operation>
+
+  <!-- ── Items with existing <comps> ─────────────────────────────────── -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[category="Item" and comps and not(comps/li[@Class="RimClaim.CompProperties_Ownership"])]/comps</xpath>
+    <value>
+      <li Class="RimClaim.CompProperties_Ownership" />
+    </value>
+  </Operation>
+
+  <!-- ── Items without <comps> ───────────────────────────────────────── -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[category="Item" and not(comps)]</xpath>
+    <value>
+      <comps>
+        <li Class="RimClaim.CompProperties_Ownership" />
+      </comps>
+    </value>
   </Operation>
 
 </Patch>
